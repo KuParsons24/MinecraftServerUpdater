@@ -111,11 +111,15 @@ class Minerman:
         print('Starting server...')
         os.chdir(self.config['server-directory'])
         if self.osName == 'Linux':
-            # cmd = subprocess.Popen('java ' + '-Xms1024M -Xmx' + self.config['dedicated-ram'] + 'M ' + '-jar ' + self.config['server-directory'] + '/server.jar --nogui', creationflags=subprocess.CREATE_NEW_CONSOLE, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
-            cmd = subprocess.Popen('java ' + '-Xms1024M -Xmx' + self.config['dedicated-ram'] + 'M ' + '-jar ' + self.config['server-directory'] + '/server.jar --nogui', stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+            # blank terminal opens to show server is running
+            cmd = subprocess.Popen('java ' + '-Xms1024M -Xmx' + self.config['dedicated-ram'] + 'M ' + '-jar ' + self.config['server-directory'] + '/server.jar --nogui', creationflags=subprocess.CREATE_NEW_CONSOLE, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+            # No terminal opens, server runs in background
+            # cmd = subprocess.Popen('java ' + '-Xms1024M -Xmx' + self.config['dedicated-ram'] + 'M ' + '-jar ' + self.config['server-directory'] + '/server.jar --nogui', stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
         elif self.osName == 'Windows':
-            # cmd = subprocess.Popen('java ' + '-Xms1024M -Xmx' + self.config['dedicated-ram'] + 'M ' + '-jar ' + self.config['server-directory'] + '/server.jar --nogui', creationflags=subprocess.CREATE_NEW_CONSOLE, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
-            cmd = subprocess.Popen('java ' + '-Xms1024M -Xmx' + self.config['dedicated-ram'] + 'M ' + '-jar ' + self.config['server-directory'] + '/server.jar --nogui', stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+            # blank terminal opens to show server is running
+            cmd = subprocess.Popen('java ' + '-Xms1024M -Xmx' + self.config['dedicated-ram'] + 'M ' + '-jar ' + self.config['server-directory'] + '/server.jar --nogui', creationflags=subprocess.CREATE_NEW_CONSOLE, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+            # No terminal opens, server runs in background
+            # cmd = subprocess.Popen('java ' + '-Xms1024M -Xmx' + self.config['dedicated-ram'] + 'M ' + '-jar ' + self.config['server-directory'] + '/server.jar --nogui', stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
             if firstRun:
                 while os.path.exists(self.config['server-directory'] + '/eula.txt') == False:
                     cmd.communicate()

@@ -8,7 +8,7 @@ class Main:
         self.theGui = GuiWindow()
         self.theMine: Minerman = None
         self.mainThread: threading.Thread = None
-        self.theGui.button.config(command=self.runServer)
+        self.theGui.run_stopButton.config(command=self.runServer)
         self.theGui.runMainWindow()
 
     def runServer(self):
@@ -18,11 +18,11 @@ class Main:
         self.mainThread = threading.Thread(target=self.theMine.mainLoop, args=(self.theGui,))
         self.mainThread.start()
         self.theGui.closingCallback = self.killWindow
-        self.theGui.button.config(text='Stop', command=self.stopServer)
+        self.theGui.run_stopButton.config(text='Stop', command=self.stopServer)
 
     def stopServer(self):
         self.theMine.kill_event.set()
-        self.theGui.button.config(text='Run', command=self.runServer)
+        self.theGui.run_stopButton.config(text='Run', command=self.runServer)
         self.theGui.closingCallback = None
 
     def killWindow(self):

@@ -9,7 +9,9 @@ class Minerman:
         self.currentDirectory = os.path.abspath(os.path.curdir)
         self.gameWindow: subprocess.Popen = None
         self.kill_event = threading.Event()
-        self.stop_event = threading.Event()
+        self.stopPrintThread_event = threading.Event()
+        self.stopServer_event = threading.Event()
+        self.startServer_Event = threading.Event()
         self.printThread: threading.Thread = None
         # Read config file or create one with default values if one does not exist.
         self.config = Minerman.readConfig()
@@ -197,6 +199,29 @@ class Minerman:
         except Exception as e:
             pass
                 
+    def startupDecisionTree(self):
+        # Read Eula file and mark true if exists. If not start server to generate eula.
+        if os.path.exists(self.config['server-directory'] + '/eula.txt') & os.path.exists(self.config['server-directory'] + '/server.jar'):
+            self.checkEula()
+            self.writeConfig()
+
+        elif os.path.exists(self.config['server-directory'] + '/server.jar'):
+            self.startServer(True)
+            self.writeConfig()
+            self.checkEula()
+
+        else:
+            self.downloadLatestServer()
+            self.startServer(True)
+            self.writeConfig()
+            self.checkEula()
+
+        self.gameWindow = self.startServer()
+        gameInfo = ['', 0, True]
+
+        self.printThread = threading.Thread(target=self.gameWindowHandler, args=(self.gameWindow, self.stopPrintThread_event, gameInfo, scriptGui))
+        self.printThread.start()
+
     # def normalStop(self):
     #     self.stopServer()
     #     # if self.gameWindow:
@@ -209,28 +234,9 @@ class Minerman:
     def mainLoop(self, scriptGui: GuiWindow = None):
         try:
 
-            # Read Eula file and mark true if exists. If not start server to generate eula.
-            if os.path.exists(self.config['server-directory'] + '/eula.txt') & os.path.exists(self.config['server-directory'] + '/server.jar'):
-                self.checkEula()
-                self.writeConfig()
-
-            elif os.path.exists(self.config['server-directory'] + '/server.jar'):
-                self.startServer(True)
-                self.writeConfig()
-                self.checkEula()
-
-            else:
-                self.downloadLatestServer()
-                self.startServer(True)
-                self.writeConfig()
-                self.checkEula()
-
+            self.startupDecisionTree()
     
-            self.gameWindow = self.startServer()
-            gameInfo = ['', 0, True]
 
-            self.printThread = threading.Thread(target=self.gameWindowHandler, args=(self.gameWindow, self.stop_event, gameInfo, scriptGui))
-            self.printThread.start()
 
             # time.sleep(25)
             # gameWindow.stdin.write('/version\n')
@@ -241,18 +247,35 @@ class Minerman:
                     time.sleep(1)
                     if self.kill_event.is_set(): 
                         exit(0)
+                    elif self.stopServer_event.is_set():
+                        self.stopServer_event.clear()
+                        self.stopServer()
+                        # if self.gameWindow:
+                        #     self.gameWindow.terminate()
+                        #     self.gameWindow.wait()
+                        if self.printThread:
+                            self.stopPrintThread_event.set()
+                            self.printThread.join()
+                            self.stopPrintThread_event.clear()
+                            self.isServerRunning = False
+                    elif self.startServer_Event.is_set():
+                        self.startServer_Event.clear()
+                        self.startupDecisionTree()
+
+
+                        
 
                 latestVersion = self.updateServer(gameInfo, self.gameWindow)
                 if latestVersion != 0:                    
                     self.stopServer()
-                    self.stop_event.set()
+                    self.stopPrintThread_event.set()
                     self.printThread.join()
-                    self.stop_event.clear()
+                    self.stopPrintThread_event.clear()
                     self.backupSever()
                     self.downloadLatestServer(latestVersion)
                     self.gameWindow = self.startServer()
                     gameInfo = ['', 0, True]
-                    self.printThread = threading.Thread(target=self.gameWindowHandler, args=(self.gameWindow, self.stop_event, gameInfo, scriptGui))
+                    self.printThread = threading.Thread(target=self.gameWindowHandler, args=(self.gameWindow, self.stopPrintThread_event, gameInfo, scriptGui))
                     self.printThread.start() 
                 
 
@@ -292,7 +315,7 @@ class Minerman:
             #     self.gameWindow.terminate()
             #     self.gameWindow.wait()
             if self.printThread:
-                 self.stop_event.set()
+                 self.stopPrintThread_event.set()
                  self.printThread.join()
                  self.isServerRunning = False
             # print(e)    
@@ -303,7 +326,7 @@ class Minerman:
                 self.gameWindow.terminate()
                 self.gameWindow.wait()
             if self.printThread:
-                self.stop_event.set()
+                self.stopPrintThread_event.set()
                 self.printThread.join()
                 self.isServerRunning = False
             #exit(1)
@@ -314,7 +337,7 @@ class Minerman:
                 self.gameWindow.terminate()
                 self.gameWindow.wait()
             if self.printThread:
-                self.stop_event.set()
+                self.stopPrintThread_event.set()
                 self.printThread.join()
                 self.isServerRunning = False
             #exit(1)

@@ -11,18 +11,24 @@ class Main:
         self.theGui.run_stopButton.config(command=self.runServer)
         self.theGui.runMainWindow()
 
-    def runServer(self):
+    def runServer(self, firstrun = True):
        # if not self.theMine.isServerRunning:
-        self.theGui.allowClose = True
-        self.theMine = Minerman()
-        self.mainThread = threading.Thread(target=self.theMine.mainLoop, args=(self.theGui,))
-        self.mainThread.start()
+        if firstrun:
+            self.theGui.allowClose = True
+            self.theMine = Minerman()
+            self.mainThread = threading.Thread(target=self.theMine.mainLoop, args=(self.theGui,))
+            self.mainThread.start()
+        else:
+            None
         self.theGui.closingCallback = self.killWindow
         self.theGui.run_stopButton.config(text='Stop', command=self.stopServer)
 
-    def stopServer(self):
-        self.theMine.kill_event.set()
-        self.theGui.run_stopButton.config(text='Run', command=self.runServer)
+    def stopServer(self, kill :bool = False):
+        if kill:
+            self.theMine.kill_event.set()
+        else:
+            self.theMine.stopServer_event.set()
+        self.theGui.run_stopButton.config(text='Run', command=lambda: self.runServer(False))
         self.theGui.closingCallback = None
 
     def killWindow(self):
